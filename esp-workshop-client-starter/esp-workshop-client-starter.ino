@@ -40,7 +40,7 @@ class MyClientCallback : public BLEClientCallbacks {
 
 // Function that is run whenever the server is connected
 bool connectToServer() {
-  Serial.println(myDevice->getAddress().toString().c_str());
+  //Serial.println(myDevice->getAddress().toString().c_str());
 
   pClient  = BLEDevice::createClient();
   pClient->setClientCallbacks(new MyClientCallback());
@@ -78,10 +78,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 };
 
 void setup() {
-  BLEDevice::init("Your number here");
+  BLEDevice::init("TessNoelle");
 
   //TODO: find way to turn off serial
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
   // Turn LED off on esp for sleep
   pinMode(LED_BUILTIN, OUTPUT);
@@ -89,20 +89,16 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
   gpio_hold_en(GPIO_NUM_2);
 
-  // Set pins high/low for the voltage divider and adc attenuation
-  // pinMode(GPIO_NUM_39, OUTPUT);
-  // pinMode(GPIO_NUM_34, OUTPUT);
-  // digitalWrite(GPIO_NUM_39, HIGH);
-  // digitalWrite(GPIO_NUM_34, LOW);
+  // Set up ADC
   adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11);
 
   // Scan for server
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setInterval(1349);
-  pBLEScan->setWindow(449);
-  pBLEScan->setActiveScan(true);
-  pBLEScan->start(5, false);
+  pBLEScan->setWindow(449); //was 449
+  pBLEScan->setActiveScan(false); //was true
+  pBLEScan->start(1, false);
 }
 
 void loop() {
@@ -119,9 +115,6 @@ void loop() {
     float analog_in = adc1_get_raw(ADC1_CHANNEL_0);
 
     float test_analog = analogRead(36);
-    
-    Serial.println(analog_in);
-    Serial.println(test_analog);
 
     //calculate the resistance of the flex sensor 
     float vin = 3.3;
@@ -136,14 +129,14 @@ void loop() {
     // Can use .concat() to append values to string
     sensor_readings.concat(",flex resistance,");
     sensor_readings.concat(r_sensor);
-    Serial.println(sensor_readings);
+    //Serial.println(sensor_readings);
 
     std::string str = sensor_readings.c_str();
     pClient->setMTU(512);
 
     pRemoteChar_1->writeValue((uint8_t*)str.c_str(), str.length());
 
-    delay(500);
+    delay(100);
     deepSleep();
   }
 }
